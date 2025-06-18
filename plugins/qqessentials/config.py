@@ -19,6 +19,6 @@ class Config(BaseModel):
     # 环境变量：ENABLE_GROUP_REQUEST_NOTIFY
     enable_group_request_notify: bool = False
     
-    # 加群请求推送目标群号列表（配置接收加群请求信息的群，支持多个群）
+    # 加群请求推送目标群号列表（只有这些群的加群请求会推送到对应群）
     # 环境变量：GROUP_REQUEST_NOTIFY_TARGET（多个群号用逗号分隔，如：123456789,987654321）
     group_request_notify_target: List[int] = []
