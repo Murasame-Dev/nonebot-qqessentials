@@ -593,10 +593,13 @@ async def handle_poke_cmd(bot: Bot, event: MessageEvent):
 
 # 添加帮助命令
 help_command = on_command("QQEss帮助", aliases={"qqess帮助"}, priority=10, permission=SUPERUSER)
+help_msg_command = on_command("消息发送帮助", priority=10, permission=SUPERUSER)
+help_group_command = on_command("群组管理帮助", priority=10, permission=SUPERUSER)
+help_status_command = on_command("状态帮助", priority=10, permission=SUPERUSER)
 
 @help_command.handle()
 async def handle_help(bot: Bot, event: MessageEvent):
-    """显示帮助信息"""
+    """显示帮助信息主页"""
     help_text = """🤖 QQ机器人功能列表
 ━━━━━━━━━━━━━━━━
 📋 基础功能：
@@ -617,25 +620,75 @@ async def handle_help(bot: Bot, event: MessageEvent):
   ├ 戳@某人 - 戳@的用户（无需指令头）
   └ 赞我 - 点赞功能（无需指令头，需要是好友）
 
-💬 消息发送：
+💬 消息发送：[展开请用: /消息发送帮助]
+🏷️ 群组管理：[展开请用: /群组管理帮助]
+🔧 状态设置：[展开请用: /状态帮助]
+━━━━━━━━━━━━━━━━
+⚠️ 注意：管理功能大部分仅限超级用户使用"""
+    
+    await help_command.send(help_text)
+
+@help_msg_command.handle()
+async def handle_help_msg(bot: Bot, event: MessageEvent):
+    """显示消息发送功能帮助"""
+    help_text = """💬 消息发送功能详细说明
+━━━━━━━━━━━━━━━━
+📤 发送功能：
   ├ /发送私聊消息 QQ号 内容 - 发送私聊消息
   ├ /发送群消息 群号 内容 - 发送群消息
   └ /删除好友 QQ号 - 删除指定QQ好友（需配置启用）
 
-🏷️ 群组管理：
+💡 使用说明：
+  • 发送消息功能仅SUPERUSER可用
+  • 删除好友功能默认关闭，需配置启用
+  • 支持发送文本消息到指定私聊或群聊
+━━━━━━━━━━━━━━━━
+👈 返回主菜单：/QQEss帮助"""
+    
+    await help_msg_command.send(help_text)
+
+@help_group_command.handle()
+async def handle_help_group(bot: Bot, event: MessageEvent):
+    """显示群组管理功能帮助"""
+    help_text = """🏷️ 群组管理功能详细说明
+━━━━━━━━━━━━━━━━
+📝 加群管理：
   ├ 加群请求推送 - 向配置的目标群推送对应群的加群请求（需配置启用）
   ├ /同意加群请求 - 引用加群请求消息回复（群管理员可用）
-  ├ /拒绝加群请求 [理由] - 引用加群请求消息回复（群管理员可用）
+  └ /拒绝加群请求 [理由] - 引用加群请求消息回复（群管理员可用）
+
+👥 成员管理：
   ├ /踹 @用户|QQ号 [群号] - 踢出指定用户（SUPERUSER权限）
   ├ /禁言 @用户|QQ号 [群号] 时间 - 禁言指定用户（SUPERUSER权限）
   ├ /解禁 @用户|QQ号 [群号] - 解除禁言指定用户（SUPERUSER权限）
   ├ /全群禁言 - 开启全群禁言（SUPERUSER权限）
-  ├ /全群解禁 - 关闭全群禁言（SUPERUSER权限）  ├ /设置管理员 @用户|QQ号 [群号] - 设置群管理员（SUPERUSER权限）
-  ├ /取消管理员 @用户|QQ号 [群号] - 取消群管理员（SUPERUSER权限）  ├ /设置头衔 @用户|QQ号 头衔名 - 设置群头衔（SUPERUSER权限，需群主）
-  ├ /取消头衔 @用户|QQ号 - 取消群头衔（SUPERUSER权限，需群主）
+  └ /全群解禁 - 关闭全群禁言（SUPERUSER权限）
+
+👑 权限管理：
+  ├ /设置管理员 @用户|QQ号 [群号] - 设置群管理员（SUPERUSER权限）
+  ├ /取消管理员 @用户|QQ号 [群号] - 取消群管理员（SUPERUSER权限）
+  ├ /设置头衔 @用户|QQ号 头衔名 - 设置群头衔（SUPERUSER权限，需群主）
+  └ /取消头衔 @用户|QQ号 - 取消群头衔（SUPERUSER权限，需群主）
+
+🚪 群聊管理：
   └ /退群 群号 - 退出指定群聊（SUPERUSER权限）
 
-🔧 状态设置用法：
+� 使用说明：
+  • 大部分功能仅SUPERUSER可用
+  • 头衔设置需要机器人为群主
+  • 支持@用户或直接输入QQ号
+  • 私聊中使用需要提供群号参数
+━━━━━━━━━━━━━━━━
+👈 返回主菜单：/QQEss帮助"""
+
+    await help_group_command.send(help_text)
+
+@help_status_command.handle()
+async def handle_help_status(bot: Bot, event: MessageEvent):
+    """显示状态设置功能帮助"""
+    help_text = """🔧 状态设置功能详细说明
+━━━━━━━━━━━━━━━━
+📋 基础用法：
   ├ /状态设置 - 查看基础状态
   ├ /状态设置 基础 - 基础状态
   ├ /状态设置 娱乐 - 娱乐状态
@@ -643,38 +696,20 @@ async def handle_help(bot: Bot, event: MessageEvent):
   ├ /状态设置 生活 - 生活状态
   ├ /状态设置 情绪 - 情绪状态
   ├ /状态设置 特殊 - 特殊状态
-  ├ /状态设置 其他 - 其他状态
+  └ /状态设置 其他 - 其他状态
+
+⚡ 高级用法：
   ├ /状态设置 电量 - 电量状态说明
   ├ /状态设置 50 [1-100] - 设置电量
   ├ /状态设置 数字 - 用编号设置状态
   └ /状态设置 状态名 - 用名称设置状态
 
-❓ 其他功能：
-  └ /QQEss帮助 - 显示此帮助信息
+💡 使用说明：
+  • 支持40+种个性状态，分类查看更方便
+  • 可按分类浏览或直接输入状态名
+  • 支持设置电量状态（1-100）
+  • 支持数字编号快速设置
 ━━━━━━━━━━━━━━━━
-⚠️ 注意：管理功能仅限超级用户使用
-🌟 支持40+种个性状态，分类查看更方便！
-🗑️ 消息撤回需引用要撤回的消息
-🎯 戳一戳功能对所有用户开放
-👍 赞我功能需要是机器人的QQ好友
-🔒 删除好友功能默认关闭，需配置启用
-📝 加群请求推送功能默认关闭，只向配置的目标群推送对应群的加群请求
-🏷️ 群管理员可在配置的目标群引用推送消息处理对应群的加群请求
-👢 踹/踢用户功能：仅SUPERUSER可用
-🔇 禁言/塞口球功能：仅SUPERUSER可用，支持0-2592000秒（0-30天）
-🔊 解禁功能：仅SUPERUSER可用，快速解除用户禁言
-🚫 全群禁言功能：仅SUPERUSER可用，开启/关闭全群禁言
-👑 管理员设置功能：仅SUPERUSER可用，设置/取消群管理员
-🏆 头衔设置功能：仅SUPERUSER可用，需要机器人为群主，支持设置/取消
-🚪 退群功能：仅SUPERUSER可用，退出指定群聊
-💡 私聊中使用踹/踢功能必须提供群号参数
-🎯 踹/踢功能支持@用户或直接输入QQ号两种方式
-🔕 禁言功能可在群内直接使用：/禁言 QQ号 时间 或 /禁言 @用户 时间
-⏰ 禁言时间单位为秒，设置为0表示解除禁言
-🔓 解禁功能快捷解除禁言：/解禁 QQ号 或 /解禁 @用户
-🌐 全群禁言：/全群禁言 或 /肃静 开启，/全群解禁 或 /大赦天下 关闭
-⚡ 管理员设置：群内可直接@用户，跨群操作需要提供群号
-🎖️ 头衔设置：仅在群聊中使用，头衔名不超过6个字符
-⚠️ 退群操作不可逆，请谨慎使用"""
+👈 返回主菜单：/QQEss帮助"""
     
-    await help_command.send(help_text)
+    await help_status_command.send(help_text)
