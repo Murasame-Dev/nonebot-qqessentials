@@ -1,4 +1,5 @@
-from nonebot import on_command, get_plugin_config, on_request
+from nonebot import on_command, get_plugin_config, on_request, on_message
+from nonebot.rule import to_me
 from nonebot.adapters.onebot.v11 import Bot, MessageEvent, Message, MessageSegment, GroupRequestEvent, GroupMessageEvent
 from nonebot.permission import SUPERUSER
 from nonebot.log import logger
@@ -73,7 +74,7 @@ async def handle_send_group_msg(bot: Bot, event: MessageEvent):
         # 获取消息ID
         message_id = result.get('data', {}).get('message_id', 'N/A')
         
-        await send_group_msg.send(f"✅ 群消息发送成功\n🏷️ 群号：{group_id}\n💬 内容：{message_content}\n🆔 消息ID：{message_id}")
+        await send_group_msg.send(f"✅ 群消息发送成功\n🏷️ 群号：{group_id}\n💬 内容：{message_content}")
         logger.info(f"群消息发送成功，群号：{group_id}，消息ID：{message_id}")
         
     except Exception as e:
@@ -1121,3 +1122,96 @@ async def handle_remove_special_title(bot: Bot, event: MessageEvent):
         error_msg = str(e)
         logger.error(f"取消头衔失败: {error_msg}")
         await remove_special_title.send(f"❌ 取消头衔失败：{error_msg}")
+
+
+# 14. 设置精华消息功能
+def exact_match_rule(*keywords):
+    """精确匹配规则：只有消息完全等于关键词时才触发"""
+    async def _rule(event: MessageEvent) -> bool:
+        message_text = str(event.get_message()).strip()
+        return message_text in keywords
+    return _rule
+
+set_essence = on_message(rule=exact_match_rule("设置精华消息", "设精"), priority=5, block=True)
+
+@set_essence.handle()
+async def handle_set_essence(bot: Bot, event: MessageEvent):
+    """设置精华消息处理器"""
+    # 检查权限（管理员、群主或SUPERUSER）
+    if not isinstance(event, GroupMessageEvent):
+        logger.warning(f"设置精华消息：不在群聊中，用户：{event.user_id}")
+        return
+    
+    # 检查用户权限
+    is_admin = await check_group_admin_permission(bot, event)
+    is_superuser = await SUPERUSER(bot, event)
+    
+    if not (is_admin or is_superuser):
+        logger.warning(f"设置精华消息：权限不足，用户：{event.user_id}，群号：{event.group_id}")
+        return
+    
+    # 检查是否引用了消息
+    if not hasattr(event, 'reply') or not event.reply:
+        logger.info(f"设置精华消息：未引用消息，群号：{event.group_id}，操作者：{event.user_id}")
+        return
+    
+    try:
+        # 获取被引用消息的ID
+        message_id = event.reply.message_id
+        if not message_id:
+            logger.error(f"设置精华消息失败：无法获取消息ID，群号：{event.group_id}，操作者：{event.user_id}")
+            return
+        
+        # 调用设置精华消息接口
+        await bot.call_api("set_essence_msg", message_id=message_id)
+        
+        # 成功时静默处理，不发送消息
+        logger.info(f"设置精华消息成功，消息ID：{message_id}，群号：{event.group_id}，操作者：{event.user_id}")
+        
+    except Exception as e:
+        error_msg = str(e)
+        logger.error(f"设置精华消息失败: {error_msg}，群号：{event.group_id}，操作者：{event.user_id}")
+        # 错误时静默处理，不发送任何消息
+
+
+# 15. 取消精华消息功能
+delete_essence = on_message(rule=exact_match_rule("取消精华消息", "取精"), priority=5, block=True)
+
+@delete_essence.handle()
+async def handle_delete_essence(bot: Bot, event: MessageEvent):
+    """取消精华消息处理器"""
+    # 检查权限（管理员、群主或SUPERUSER）
+    if not isinstance(event, GroupMessageEvent):
+        logger.warning(f"取消精华消息：不在群聊中，用户：{event.user_id}")
+        return
+    
+    # 检查用户权限
+    is_admin = await check_group_admin_permission(bot, event)
+    is_superuser = await SUPERUSER(bot, event)
+    
+    if not (is_admin or is_superuser):
+        logger.warning(f"取消精华消息：权限不足，用户：{event.user_id}，群号：{event.group_id}")
+        return
+    
+    # 检查是否引用了消息
+    if not hasattr(event, 'reply') or not event.reply:
+        logger.info(f"取消精华消息：未引用消息，群号：{event.group_id}，操作者：{event.user_id}")
+        return
+    
+    try:
+        # 获取被引用消息的ID
+        message_id = event.reply.message_id
+        if not message_id:
+            logger.error(f"取消精华消息失败：无法获取消息ID，群号：{event.group_id}，操作者：{event.user_id}")
+            return
+        
+        # 调用取消精华消息接口
+        await bot.call_api("delete_essence_msg", message_id=message_id)
+        
+        # 成功时静默处理，不发送消息
+        logger.info(f"取消精华消息成功，消息ID：{message_id}，群号：{event.group_id}，操作者：{event.user_id}")
+        
+    except Exception as e:
+        error_msg = str(e)
+        logger.error(f"取消精华消息失败: {error_msg}，群号：{event.group_id}，操作者：{event.user_id}")
+        # 错误时静默处理，不发送任何消息
